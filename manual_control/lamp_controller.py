@@ -1,3 +1,5 @@
+# === still editing === #
+
 import RPi.GPIO as GPIO
 import spidev
 import json
@@ -8,7 +10,7 @@ import threading
 BUTTON_ON_OFF = 17
 BUTTON_COLOR = 27
 BUTTON_MODE = 22
-LED_PINS = {'R': 18, 'G': 23, 'B': 24}
+LED_PINS = {'R': 18, 'G': 23, 'B': 24}  ## just ignore it, to substitute with LED strip
 
 # === State Variables ===
 state = {
@@ -24,11 +26,11 @@ spi = spidev.SpiDev()
 spi.open(0, 0)
 spi.max_speed_hz = 1350000
 
-def read_adc(channel):
+def read_adc(channel): #read analog value from ADC chip
     adc = spi.xfer2([1, (8+channel)<<4, 0])
     return ((adc[1]&3) << 8) + adc[2]
 
-# === GPIO Setup ===
+# === GPIO Setup ===  ## can ignore it, doesn't include, will delete soon
 GPIO.setmode(GPIO.BCM)
 GPIO.setup([BUTTON_ON_OFF, BUTTON_COLOR, BUTTON_MODE], GPIO.IN, pull_up_down=GPIO.PUD_UP)
 for pin in LED_PINS.values():
@@ -46,11 +48,11 @@ def apply_color():
     pwm['G'].ChangeDutyCycle(g * brightness)
     pwm['B'].ChangeDutyCycle(b * brightness)
 
-def save_state():
+def save_state(): #when the system is on
     with open("lamp_state.json", "w") as f:
         json.dump(state, f)
 
-def load_state():
+def load_state(): #when the system is in a reboot
     global state
     try:
         with open("lamp_state.json", "r") as f:
@@ -88,7 +90,7 @@ def auto_mode_loop():
             time.sleep(0.5)
 
 # === Brightness Control Thread ===
-def brightness_loop():
+def brightness_loop(): #when auto mode is on
     while True:
         adc_value = read_adc(0)
         state["brightness"] = int((adc_value / 1023) * 100)
@@ -96,7 +98,7 @@ def brightness_loop():
         time.sleep(0.2)
 
 # === Main ===
-load_state()
+load_state() 
 threading.Thread(target=button_loop, daemon=True).start()
 threading.Thread(target=brightness_loop, daemon=True).start()
 threading.Thread(target=auto_mode_loop, daemon=True).start()
